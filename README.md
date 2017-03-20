@@ -153,9 +153,19 @@ Each component below corresponds to a device, for example a Wemos shield.
 
 ### led.lua
 
+This component allows to play with the blue led on the NodeMCU board.
+Be careful this component use GPIO2 also used by SHT30 shield.
+ 
 #### Remote actions
 
+* **toggle**: change the state of the GPIO2 associated to the blue led on boead. At
+initialisation the state is *gpio.HIGH*.
+* **blink**: temporarily change during 1 second the state of the GPIO2 associated to
+the led. The period of change is defined in milliseconds by the delay local variable.
+
 #### Published datas
+
+Currently empty.
 
 ### sht30.lua
 
@@ -202,13 +212,21 @@ datas on the corresponding topics *${data}/${device}/dht22/temperature* and
 If the component is initialized in observation mode it publishes regularly (see period
 local variable) the sensor's temperature and humidity datas.
 
+* **temperature**: 
+* **humidity**: 
+
 ### relay.lua
 
 This component correponds to the use of the Wemos relay shield.
+Be careful, the Wemos relay shield is not compatible with the SHT30 shield.
 
 #### Remote actions
 
-* **toggle**: 
-* **blink**: 
+* **toggle**: change the state of the GPIO5 associated to the Wemos relay shield. At
+starting the state is *gpio.LOW*.
+* **blink**: temporarily change during 1 second the state of the GPIO5 associated to
+the shield. The period of change is defined in milliseconds by the delay local variable.
 
 #### Published datas
+
+Currently empty.

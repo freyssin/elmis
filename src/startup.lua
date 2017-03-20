@@ -39,15 +39,19 @@ local function publish(dev, rsrc, msg)
   m:publish(data..dev.."/"..rsrc, msg, 0, 1)
 end
 
-local function register()
+local function register(name)
+  -- Load the module
+  devices[name] = require(name)
+  -- Initialize the module registering accessible commands
+  devices[name].init(name, publish)
+end
+
+local function register_all()
   -- Load all registered modules
   for i in pairs(devices_list) do
     dev = devices_list[i]
     print("Register "..dev)
-    -- Load each needed module
-    devices[dev] = require(dev)
-    -- Initialize each module registering accessible commands
-    devices[dev].init(dev, publish)
+    register(dev)
   end
 end
 
@@ -57,7 +61,7 @@ local function on_connect(client)
   m:subscribe(ctrl.."#",0, function(client) print("subscribe success") end)
   m:publish(data.."status", "on", 0, 1)
   
-  register()
+  register_all()
 end
 
 local function mqtt_connect()

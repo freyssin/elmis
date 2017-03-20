@@ -9,9 +9,9 @@ local dev, publish
 
 -- Relay shield parameters
 
-gpio_pin = 1 -- GPIO5
-gpio_state = gpio.LOW
-delay = 1000
+local gpio_pin = 1 -- GPIO5
+local gpio_state = gpio.LOW
+local delay = 1000
 
 -- Declare module functions below
 
@@ -45,8 +45,8 @@ local actions = {
 -- These 2 methods are needed by micro-service framework
 RELAY.init = init
 RELAY.actions = actions
--- These methods are only needed for external use of the LED module
+-- These methods are only needed for external use of the relay module
 RELAY.toggle = toggle
-RELAY.switch = switch
+RELAY.blink = blink
 
 return RELAY

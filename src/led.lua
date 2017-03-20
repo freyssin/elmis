@@ -7,9 +7,9 @@ local LED = {}
 
 -- Led shield parameters
 
-delay=1000
-pin_led = 4  -- GPIO 4 Blue led
-lighton = gpio.HIGH
+local delay=1000
+local pin_led = 4  -- GPIO 2 Blue led
+local lighton = gpio.HIGH
 
 -- Declare module functions below
 
