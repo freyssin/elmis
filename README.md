@@ -1,13 +1,14 @@
-# eLMIS (eLua MQTT IoT service platform)
+# eLMIS (**eL**ua **M**QTT **I**oT **S**ervice Platform)
 
 A micro-service eLUA / MQTT platform for the IoT World with NodeMCU.
 
 ## Firmware requirements
 
-In order to run eLMIS needs somes specific firmware modules, you may build such a
-firmware from the [NodeMCU cloud build service](https://nodemcu-build.com). You need
-to nclude the following modules: bit, cjson, cron, dht, file, gpio, i2c, mqtt, net,
-node, ow, pwm, rtctime, tmr, u8g, uart, wifi, ws2812.
+In order to run eLMIS you need somes specific firmware modules. You may build such a
+firmware from the [NodeMCU cloud build service](https://nodemcu-build.com).
+
+You need to include the following modules: bit, cjson, cron, dht, file, gpio, i2c,
+mqtt, net, node, ow, pwm, rtctime, tmr, u8g, uart, wifi, ws2812.
 
 Many of these modules are only needed for some specific components of the framework,
 so you can build a restrained firmware depending of your project.
@@ -44,19 +45,26 @@ This component initializes the MQTT connection according to the parameters in
 config_mqtt.lua configuration file. Next it initializes each component listed in the
 config_dev.lua configuration file.
 
+#### Published datas
+
+The component publish retained messages on the ${data}/${device}/status topic:
+
+* "on" after initialisation
+* "off" in case of failure or shutdown (using the will MQTT functionnality).
+
 #### Framework component
 
-Each component returns a description table with at least an initialisation function
+Each component *comp* returns a description table with at least an initialisation function
 (called by the framework), and a table defining all remote actions.
 
 Each remote action can be remotely invoked by sending a message on the
-${ctrl}/${device}/${method} topic. For example, the relay component defines 2 remote
-actions allowing to remotely toggle or blink the relay by sending messages on
-${ctrl}/relay/toggle or ${ctrl}/relay/blink topics.
+${ctrl}/${device}/${comp}/${method} topic. For example, the relay component defines
+2 remote actions allowing to remotely toggle or blink the relay by sending messages
+on ${ctrl/${device}}/relay/toggle or ${ctrl}/${device}/relay/blink topics.
 
 A component can publishes datas on ${data}/${device}/${resource} topics. For example,
 a DHT22 component will regularly publish messages on ${data}/dht22/temperature and
-${data}/dht22/humidity topics.
+${data}/${device}/dht22/humidity topics.
 
 #### config_mqtt.lua
 
@@ -67,6 +75,7 @@ This file contains the MQTT configuration:
 * The unique device identifier (also used as MQTT client identifier).
 * The topic tree convention.
 
+For example:
 ```lua
 mqtt_broker="192.168.1.80"
 mqtt_port=1883
@@ -80,32 +89,126 @@ ctrl="/dev/ctrl/"..deviceID.."/"
 
 #### config_dev.lua
 
-This file contains the declaration of a unique global variable devices_list defining the list of all components to initialize.
+This file contains the declaration of a unique global variable devices_list defining
+the list of all components to initialize.
 
+For example:
 ```lua
 devices_list = { "device", "firmware", "led", "dht22", "relay" }
 ```
 
-### MQTT conventions
-
 ## Build a new module
+
+This section explains how to build a new component using the eLMIS platform.
 
 ### X.lua
 
+The X.lua file contains the canvas for an empty component, you can use it to define
+your own components.
+
 ## Extended framework
 
-Each component corresponds to a device, for example a Wemos shield.
+The components below correspond to extended functionnaly of the platform, for example
+giving extra informations about the device or its configuration, or allowing OTA
+(Other The Air) configuration or updates.
 
 ### device.lua
 
+This component allows to get information about the device and its configuration.
+
+#### Remote actions
+
+* **get_info**: Returns various informations about firmware version, chip and flash
+identifiers. The request message is empty, the reply is sent as a unique message on
+${data}/${device}/info topic.
+* **get_fsinfo**: Returns informations about the filesystem.  The request message is
+empty, the reply is sent as a unique message on ${data}/${device}/fsinfo topic.
+
+#### Published datas
+
+Currently empty.
+
 ### firmware.lua
 
-## Additionnals component
+This component allows to control the platorm, currently software updates and restart.
+
+#### Remote actions
+
+* **update**: Updates the requesting LUA file. The basename of file to update is given
+in the first line of the message (without extension), the next lines of the message
+contains the new file content.
+* **restart**: Asks to restart the device.
+
+#### Published datas
+
+Currently empty.
+
+#### Software updates
+
+The update is made atomically, a file named *${basename}.tmp* is first created with the content of the message then renamed *${basename}.lua*.
+
+## Additionnal components
+
+Each component below corresponds to a device, for example a Wemos shield.
 
 ### led.lua
 
+#### Remote actions
+
+#### Published datas
+
 ### sht30.lua
+
+This component correponds to the use of the Wemos SHT30 shield.
+Be careful, the Wemos SHT30 shield is not compatible with the relay shield.
+
+#### Remote actions
+
+Currently there is only one remote action defined, it allows to explicitly get
+data from the corresponding sensor. In future we can whish methods allowing to
+dynamically configure the component, for example to toggle it in observation mode,
+or to fix the observation period.
+
+* **get_data**: trigger the publication of the sensor's temperature and humidity
+datas on the corresponding topics *${data}/${device}/sht30/temperature* and
+*${data}/${device}/sht30/humidity*.
+
+#### Published datas
+
+If the component is initialized in observation mode it publishes regularly (see period
+local variable) the sensor's temperature and humidity datas.
+
+* **temperature**: 
+* **humidity**: 
 
 ### dht22.lua
 
+This component correponds to the use of the Wemos DHT22 shield.
+It should be used as is with a DHT11 shield.
+
+#### Remote actions
+
+Currently there is only one remote action defined, it allows to explicitly get
+data from the corresponding sensor. In future we can whish methods allowing to
+dynamically configure the component, for example to toggle it in observation mode,
+or to fix the observation period.
+
+* **get_data**: trigger the publication of the sensor's temperature and humidity
+datas on the corresponding topics *${data}/${device}/dht22/temperature* and
+*${data}/${device}/dht22/humidity*.
+
+#### Published datas
+
+If the component is initialized in observation mode it publishes regularly (see period
+local variable) the sensor's temperature and humidity datas.
+
 ### relay.lua
+
+This component correponds to the use of the Wemos relay shield.
+
+#### Remote actions
+
+* **toggle**: 
+* **blink**: 
+
+#### Published datas
