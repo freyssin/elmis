@@ -1,17 +1,23 @@
-# eLMIS (**eL**ua **M**QTT **I**oT **S**ervice Platform)
+# eLMIS (*eL*ua *M*QTT *I*oT *S*ervice Platform)
 
 A micro-service eLUA / MQTT platform for the IoT World with NodeMCU.
 
+----
+
 ## Firmware requirements
 
-In order to run eLMIS you need somes specific firmware modules. You may build such a
-firmware from the [NodeMCU cloud build service](https://nodemcu-build.com).
+**eLMIS** framwework depends on [NodeMCU](https://nodemcu.readthedocs.io/en/master/),
+an eLua based firmware for the ESP8266 WiFi SOC from Espressif. In order to use eLMIS
+you need somes specific firmware modules. You may build such a firmware from the
+[NodeMCU cloud build service](https://nodemcu-build.com).
 
 You need to include the following modules: bit, cjson, cron, dht, file, gpio, i2c,
 mqtt, net, node, ow, pwm, rtctime, tmr, u8g, uart, wifi, ws2812.
 
 Many of these modules are only needed for some specific components of the framework,
 so you can build a restrained firmware depending of your project.
+
+----
 
 ## Base framework
 
@@ -20,7 +26,7 @@ The base framework consists of 2 modules:
 * The first one (init.lua) initializes the WiFI network and then launches the framework.
 The network credentials (SSID and password) are stored in the config_net.lua file.
 * The second one (startup.lua) initializes the MQTT communications and registers all the
-requested components. This module use 2 configuration file:
+requested components. This module use 2 configuration files:
   * config_mqtt.lua
   * config_dev.lua
 
@@ -28,18 +34,19 @@ requested components. This module use 2 configuration file:
 
 mqtt, net, tmr, wifi.
 
-### init.lua
+### Initialisation component: *init.lua*
 
 This component allow to first setup the WiFi connection and then launch the framework.
-In order to avoid a PANIC loop it defines a 3 seconds pause (see
+In order to avoid a PANIC loop it defines a 3 seconds pause that would allow you to
+interrupt the sequence by e.g. deleting or renaming init.lua file (see
 [NodeMCU init.lua](https://nodemcu.readthedocs.io/en/master/en/upload/#initlua)).
 
-#### config_net.lua
+#### Configuration: *config_net.lua*
 
 This configuration file defines the SSID and password needed to connect to your WiFi
 network.
 
-### startup.lua
+### Base component: *startup.lua*
 
 This component initializes the MQTT connection according to the parameters in
 config_mqtt.lua configuration file. Next it initializes each component listed in the
@@ -66,7 +73,7 @@ A component can publishes datas on ${data}/${device}/${resource} topics. For exa
 a DHT22 component will regularly publish messages on ${data}/dht22/temperature and
 ${data}/${device}/dht22/humidity topics.
 
-#### config_mqtt.lua
+#### Configuration: *config_mqtt.lua*
 
 This file contains the MQTT configuration:
 
@@ -77,17 +84,26 @@ This file contains the MQTT configuration:
 
 For example:
 ```lua
+-- Define MQTT URI
 mqtt_broker="192.168.1.80"
 mqtt_port=1883
+
+-- Define MQTT credentials
 mqtt_user=nil
 mqtt_password=nil
+
+-- Define session parameters
 mqtt_clean=1
+
+-- Define device identifier
 deviceID = "nodemcu01"
+
+-- Define the MQTT topics paths for datas and control
 data="/dev/data/"..deviceID.."/"
 ctrl="/dev/ctrl/"..deviceID.."/"
 ```
 
-#### config_dev.lua
+#### Configuration: *config_dev.lua*
 
 This file contains the declaration of a unique global variable devices_list defining
 the list of all components to initialize.
@@ -97,14 +113,95 @@ For example:
 devices_list = { "device", "firmware", "led", "dht22", "relay" }
 ```
 
+----
+
 ## Build a new module
 
 This section explains how to build a new component using the eLMIS platform.
 
 ### X.lua
 
-The X.lua file contains the canvas for an empty component, you can use it to define
-your own components.
+The X.lua file contains an empty component, you can use it as a canvas. To build
+your own component from the X canvas you need:
+1. Add the variables and functions needed by the X shield in the related
+sections. Pay attention to declare local variables and functions to avoid
+collision with declaration in other components.
+  * If you need to send datas about X resources you may use the publish
+  function. The first parameter is the name of yourdevice (contained in the
+dev local variable), the second parameter is the name of the resource (for
+example *temperature* or *humidity* for the DHT22 device), and the last
+parameter is the message.
+2. Add the initialisation code needed by the X shield in the init_x
+functions.
+3. Add the [remote actions](#framework-component) in the actions table.
+  * Declare as *remote actions* each method that you want remotely invoked by
+  sending a message.
+  * if the key associated to the method in the *actions* table is m1,
+  the method will be invoked each time a message will be sent on the
+  *${ctrl}/${device}/X/m1* topic.
+4. Add in the X table each method of the component that you want to use
+from the outside. Remote actions don't need to be declared in this table,
+from the framework point of view only init method and actions table are
+needed.
+5. Add the X component in the *devices_list table* of the *config_dev.lua* file.
+
+For example, you can build an Hello component with specification below:
+* Send regularly an *hello* message on the "hello" resource.
+* Define a *remote actions* "set_hello" allowing to change the *hello* message.
+
+```lua
+-- LGPL v3 License (Free Software Foundation)
+-- Copyright (C) 2017 ScalAgent Distributed Technologies
+
+-- Hello module
+
+local Hello = {}
+
+local dev, publish
+
+-- Hello shield parameters
+
+local period=10000
+local timer = tmr.create()
+local msg = "Hello world"
+
+-- Declare component functions below
+
+local function set_msg(m)
+  print("set_msg: ".. m)
+  msg = m
+end
+
+local function send_msg()
+  publish(dev, "hello", msg)
+end
+
+-- Initialisation function
+local function init_hello(d, p)
+  dev = d
+  publish = p
+  -- Add the initialisation of the X shield if needed below
+  timer:register(period, tmr.ALARM_AUTO, send_msg)
+  timer:start()
+end
+
+-- Table of functions 
+local actions = {
+  ["init"] = init_hello,
+  ["set_hello"] = set_msg
+}
+
+-- These 2 methods are needed by micro-service framework
+Hello.init = init_hello
+Hello.actions = actions
+-- These methods below are only needed for external use of the X module
+Hello.set_msg = set_msg
+Hello.send_msg = send_msg
+
+return Hello
+```
+
+----
 
 ## Extended framework
 
@@ -146,6 +243,8 @@ Currently empty.
 #### Software updates
 
 The update is made atomically, a file named *${basename}.tmp* is first created with the content of the message then renamed *${basename}.lua*.
+
+----
 
 ## Additionnal components
 
@@ -230,3 +329,5 @@ the shield. The period of change is defined in milliseconds by the delay local v
 #### Published datas
 
 Currently empty.
+
+----

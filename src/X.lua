@@ -9,27 +9,23 @@ local dev, publish
 
 -- X shield parameters
 
--- Declare module functions below
-
-local function m1()
-end
+-- Declare component functions below
 
 -- Initialisation function
 local function init_x(d, p)
   dev = d
   publish = p
+  -- Add the initialisation of the X shield if needed below
 end
 
 -- Table of functions 
 local actions = {
-  ["init"] = init_dht,
-  ["m1"] = m1
+  ["init"] = init_x
 }
 
 -- These 2 methods are needed by micro-service framework
-X.init = init_dht
+X.init = init_x
 X.actions = actions
--- These methods are only needed for external use of the LED module
-X.m1 = m1
+-- These methods below are only needed for external use of the X module
 
 return X
