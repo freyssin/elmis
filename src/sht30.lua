@@ -11,7 +11,7 @@ local dev, publish
 local id  = 0
 local sda = 2 -- pin D2
 local scl = 1 -- pin D1
-local dev_addr = 0x45
+local dev_addr = 0x45 -- SHT30
 
 local delay=14 -- 13500us
 
@@ -46,32 +46,54 @@ local function get_data()
   tmr.create():alarm(delay, tmr.ALARM_SINGLE, get_data2)
 end
 
--- If observe is true device the device send data automatically, otherwise
--- datas shall be get explicitly
-local observe=true
-local period=10000
+-- If period set to 0 datas shall be get explicitly, otherwise the device
+-- send data automatically. Set by default to 10s in init_sht.
+local period=0
 local timer = tmr.create()
+
+local function register(p)
+  if (p > 0) then
+    if (p < 5000) then
+      p = 5000
+    end
+    if (period > 0) then
+      timer:interval(p)
+    else
+      timer:register(p, tmr.ALARM_AUTO, get_data)
+      timer:start()
+    end
+    period = p
+  else
+    if (period > 0) then
+      timer:unregister();
+    end
+    period = 0
+  end
+end
+
+local function set_period(m)
+  p = tonumber(m)
+  register(p)
+end
 
 -- Initialisation function
 local function init_sht(d, p)
   dev = d
   publish = p
-
+  -- Add the initialisation of the SHT shield
   i2c.setup(id, sda, scl, i2c.SLOW)
-  if observe then
-    timer:register(period, tmr.ALARM_AUTO, get_data)
-    timer:start()
-  end
+  register(10000)
 end
 
 local actions = {
   ["init"] = init_sht,
-  ["get_data"] = get_data
+  ["get_data"] = get_data,
+  ["set_period"] = set_period
 }
 
 SHT.init = init_sht
 SHT.actions = actions
--- These methods are only needed for external use of the LED module
+-- These methods are only needed for external use of the SHT module
 SHT.get_data = get_data
-
+SHT.set_period = set_period
 return SHT
