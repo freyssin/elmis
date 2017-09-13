@@ -20,22 +20,23 @@ local colors = {
   ["yellow"]  = {45,45,0},
   ["magenta"] = {0,45,45},
   ["cyan"]    = {45,0,45},
-  ["white"]   = {30,30,30},
-  ["off"]     = {0,0,0},
-  default = {0,0,0}
+  ["white"]   = {30,30,30}
 }
 
+local off = {0,0,0}
 local color = colors["green"]
 
 -- Declare component functions below
 
 local function set_color(msg)
+  old = color
   color = colors[msg]
+  if (color == nil) then
+    color = old
+  end
 end
 
-local function toggle_ws2812(msg)
-  print("toggle_ws2812")
-  set_color(msg)
+local function toggle_ws2812()
   if lighton == true then
     lighton = false
     ws2812.write(string.char(0,0,0))
@@ -45,13 +46,14 @@ local function toggle_ws2812(msg)
   end
 end
 
-local function blink_ws2812(msg)
-  toggle_ws2812(msg)
+local function blink_ws2812()
+  toggle_ws2812()
   tmr.create():alarm(delay, tmr.ALARM_SINGLE, toggle_ws2812)
 end
 
-local function on_ws2812()
-  ws2812.write(color)
+local function on_ws2812(msg)
+  set_color(msg)
+  ws2812.write(string.char(color[1],color[2],color[3]))
 end
 
 local function off_ws2812()
