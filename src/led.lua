@@ -5,6 +5,8 @@
 
 local LED = {}
 
+local dev, publish
+
 -- Led shield parameters
 
 local delay=1000
@@ -23,10 +25,11 @@ local function toggle()
 end
 
 local function blink()
-  toggle_led()
-  tmr.create():alarm(delay, tmr.ALARM_SINGLE, toggle_led)
+  toggle()
+  tmr.create():alarm(delay, tmr.ALARM_SINGLE, toggle)
 end
 
+-- Initialisation function
 local function init(d, p)
   dev = d
   publish = p
@@ -35,6 +38,7 @@ local function init(d, p)
   gpio.write(pin_led, lighton)
 end
 
+-- Table of functions 
 local actions = {
   ["init"] = init,
   ["toggle"] = toggle,

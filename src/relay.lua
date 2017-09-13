@@ -9,7 +9,7 @@ local dev, publish
 
 -- Relay shield parameters
 
-local gpio_pin = 1 -- GPIO5
+local gpio_pin = 4  -- GPIO 2 Blue led
 local gpio_state = gpio.LOW
 local delay = 1000
 
@@ -33,6 +33,9 @@ end
 local function init(d, p)
   dev = d
   publish = p
+  -- Initializes the shield
+  gpio.mode(gpio_pin, gpio.OUTPUT)
+  gpio.write(gpio_pin, gpio_state)
 end
 
 -- Table of functions 

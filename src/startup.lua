@@ -32,6 +32,7 @@ local function on_message(client, topic, msg)
   end
   dev_id = string.match(topic, ".*/(.*)/.*")
   method = string.match(topic, ".*/(.*)")
+  print("recv "..dev_id..", "..method)
   execute(dev_id, method, msg)
 end
 

@@ -13,25 +13,29 @@ local dev, publish
 local delay=1000
 local lighton = false
 
-red     = {0,90,0}
-green   = {90,0,0}
-blue    = {0,0,90}
-yellow  = {45,45,0}
-magenta = {0,45,45}
-cyan    = {45,0,45}
-white   = {30,30,30}
-off     = {0,0,0}
+local colors = {
+  ["red"]     = {0,90,0},
+  ["green"]   = {90,0,0},
+  ["blue"]    = {0,0,90},
+  ["yellow"]  = {45,45,0},
+  ["magenta"] = {0,45,45},
+  ["cyan"]    = {45,0,45},
+  ["white"]   = {30,30,30},
+  ["off"]     = {0,0,0},
+  default = {0,0,0}
+}
 
-color = green
+local color = colors["green"]
 
 -- Declare component functions below
 
 local function set_color(msg)
-  if (msg = 
+  color = colors[msg]
 end
 
-local function toggle_ws2812()
+local function toggle_ws2812(msg)
   print("toggle_ws2812")
+  set_color(msg)
   if lighton == true then
     lighton = false
     ws2812.write(string.char(0,0,0))
@@ -41,9 +45,13 @@ local function toggle_ws2812()
   end
 end
 
-local function blink_ws2812()
-  toggle_ws2812()
+local function blink_ws2812(msg)
+  toggle_ws2812(msg)
   tmr.create():alarm(delay, tmr.ALARM_SINGLE, toggle_ws2812)
+end
+
+local function on_ws2812()
+  ws2812.write(color)
 end
 
 local function off_ws2812()
@@ -62,6 +70,8 @@ end
 -- Table of functions 
 local actions = {
   ["init"] = init_ws2812,
+  ["on"] = on_ws2812,
+  ["color"] = set_color,
   ["toggle"] = toggle_ws2812,
   ["blink"] = blink_ws2812,
   ["off"] = off_ws2812
@@ -71,11 +81,13 @@ local actions = {
 WS2812.init = init_ws2812
 WS2812.actions = actions
 -- These methods below are only needed for external use of the WS2812 module
+WS2812.on = on_ws2812
+WS2812.color = set_color
 WS2812.toggle = toggle_ws2812
 WS2812.blink = blink_ws2812
 WS2812.off = off_ws2812
 
 init_ws2812()
-blink_ws2812()
+off_ws2812()
 
 return WS2812

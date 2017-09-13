@@ -2,7 +2,8 @@
 -- Copyright (C) 2017 ScalAgent Distributed Technologies
 
 -- Define MQTT URI
-mqtt_broker="xx.xx.xx.xx"
+-- mqtt_broker="xx.xx.xx.xx"
+mqtt_broker="192.168.1.80"
 mqtt_port=1883
 
 -- Define MQTT credentials
