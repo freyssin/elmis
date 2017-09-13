@@ -44,7 +44,12 @@ interrupt the sequence by e.g. deleting or renaming init.lua file (see
 #### Configuration: *config_net.lua*
 
 This configuration file defines the SSID and password needed to connect to your WiFi
-network.
+network, for example:
+```lua
+ssid = "xxxxxxxx"
+pwd = "xxxxxxxx"
+```
+
 
 ### Base component: *startup.lua*
 
@@ -292,8 +297,9 @@ local variable) the sensor's temperature and humidity datas.
 
 ### dht22.lua
 
-This component correponds to the use of the Wemos DHT22 shield.
-It should be used as is with a DHT11 shield.
+This component correponds to the use of the old Wemos DHT shield based on DHT11
+or DHT22.
+It should be used as is with a DHT11 or DHT22 shield.
 
 #### Remote actions
 
@@ -314,6 +320,30 @@ local variable) the sensor's temperature and humidity datas.
 * **temperature**: 
 * **humidity**: 
 
+### dht12.lua
+
+This component correponds to the use of the new Wemos DHT shield based on DHT12.
+Be careful, this new Wemos DHT shield is not compatible with the relay shield.
+
+#### Remote actions
+
+Currently there is only one remote action defined, it allows to explicitly get
+data from the corresponding sensor. In future we can whish methods allowing to
+dynamically configure the component, for example to toggle it in observation mode,
+or to fix the observation period.
+
+* **get_data**: trigger the publication of the sensor's temperature and humidity
+datas on the corresponding topics *${data}/${device}/dht12/temperature* and
+*${data}/${device}/dht12/humidity*.
+
+#### Published datas
+
+If the component is initialized in observation mode it publishes regularly (see period
+local variable) the sensor's temperature and humidity datas.
+
+* **temperature**: 
+* **humidity**: 
+
 ### relay.lua
 
 This component correponds to the use of the Wemos relay shield.
@@ -325,6 +355,33 @@ Be careful, the Wemos relay shield is not compatible with the SHT30 shield.
 starting the state is *gpio.LOW*.
 * **blink**: temporarily change during 1 second the state of the GPIO5 associated to
 the shield. The period of change is defined in milliseconds by the delay local variable.
+
+#### Published datas
+
+Currently empty.
+
+### WS2812.lua
+
+This component correponds to the use of the Wemos WS2812 led shield.
+Be careful, the Wemos WS2812 led shield is not compatible with i2c components
+like SHT30 or DHT12.
+
+The led state is defined first by its status (on | off), and second by its color.
+There are 7 predefined colors: red, green, blue, yellow, magenta, cyan and
+white.
+At starting the led is off and its color is *green*.
+
+#### Remote actions
+
+* **on**: set on the RGB led with the color given in parameter. If there is no
+parameter or if the color is not defined the color is not changed.
+* **color**: change the color of the led with the color given in parameter. If
+there is no parameter or if the color is not defined the color is not changed.
+The color change will taken in account to the next state change.
+* **toggle**: change the state of the RGB led (on -> off, and off -> on).
+* **blink**: temporarily change during 1 second the state of the RGB led. The
+period of change is defined in milliseconds by the delay local variable.
+* **off**: set off the RGB led.
 
 #### Published datas
 
