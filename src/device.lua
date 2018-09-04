@@ -1,5 +1,5 @@
 -- LGPL v3 License (Free Software Foundation)
--- Copyright (C) 2017 ScalAgent Distributed Technologies
+-- Copyright (C) 2017 -2018 ScalAgent Distributed Technologies
 
 -- Device module
 
@@ -29,6 +29,13 @@ local function get_flashsize()
   publish(dev, "flashsize", node.flashsize())
 end
 
+local function refresh()
+	get_info()
+	get_fsinfo()
+	get_heap()
+	get_flashsize()
+end
+
 local function restart()
   node.restart()
 end
@@ -41,6 +48,7 @@ end
 
 -- Table of functions 
 local actions = {
+  ["refresh"] = refresh,
   ["get_info"] = get_info,
   ["get_fsinfo"] = get_fsinfo,
   ["get_heap"] = get_heap,
@@ -52,6 +60,7 @@ local actions = {
 DEV.init = init_dev
 DEV.actions = actions
 -- These methods are only needed for external use of the device module
+DEV.refresh = refresh
 DEV.get_info = get_info
 DEV.get_fsinfo = get_fsinfo
 DEV.get_heap = get_heap
