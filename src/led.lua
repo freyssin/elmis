@@ -1,5 +1,5 @@
 -- LGPL v3 License (Free Software Foundation)
--- Copyright (C) 2017 ScalAgent Distributed Technologies
+-- Copyright (C) 2017 - 2018 ScalAgent Distributed Technologies
 
 -- Play with blue led on board (Wemos or ESP8266)
 
