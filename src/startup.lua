@@ -1,5 +1,5 @@
 -- LGPL v3 License (Free Software Foundation)
--- Copyright (C) 2017 ScalAgent Distributed Technologies
+-- Copyright (C) 2017 - 2018 ScalAgent Distributed Technologies
 
 -- load MQTT configuration
 dofile("config_mqtt.lua")
@@ -21,7 +21,6 @@ local function execute(dev_id, method, param)
   else
     print("Unknown device: "..dev_id)
   end
-  
 end
 
 local function on_message(client, topic, msg)
@@ -37,14 +36,22 @@ local function on_message(client, topic, msg)
 end
 
 local function publish(dev, rsrc, msg)
-  m:publish(data..dev.."/"..rsrc, msg, 0, 1)
+  if connected then
+    -- Avoids to send a message when disconnected (can cause a panic).
+    -- May be we should postpone this message with a timer.
+    m:publish(data..dev.."/"..rsrc, msg, 0, 1)
+  end
 end
 
 local function register(name)
   -- Load the module
-  devices[name] = require(name)
-  -- Initialize the module registering accessible commands
-  devices[name].init(name, publish)
+  if (file.exists(name..".lua")) then
+    devices[name] = require(name)
+    -- Initialize the module registering accessible commands
+    devices[name].init(name, publish)
+  else
+    print("cannot load "..name..".lua")
+  end
 end
 
 local function register_all()
@@ -56,22 +63,39 @@ local function register_all()
   end
 end
 
-local function on_connect(client)
+local function on_connect(client, first)
   print ("MQTT connected")
-
-  m:subscribe(ctrl.."#",0, function(client) print("subscribe success") end)
+  connected = true
+  if first then
+    m:subscribe(ctrl.."#",0, function(client) print("subscribe success") end)
+    register_all()
+  end
   m:publish(data.."status", "on", 0, 1)
-  
-  register_all()
+end
+
+function handle_mqtt_error(client, reason)
+  print("failed reason: "..reason)
+  connected = false
+  tmr.create():alarm(1000, tmr.ALARM_SINGLE, function(client) do_mqtt_connect(client, false) end)
+end
+
+function do_mqtt_connect(client, first)
+  if wifi.sta.status() ~= wifi.STA_GOTIP then
+    print("Wait IP..")
+    tmr.create():alarm(1000, tmr.ALARM_SINGLE, function(client) do_mqtt_connect(client, first) end)
+  else
+    print("MQTT connect..")
+    -- m:connect("server", function(client) print("connected") end, handle_mqtt_error)
+    m:connect(mqtt_broker, mqtt_port, 0, 0, function(client) on_connect(client, first) end, handle_mqtt_error)
+  end
 end
 
 local function mqtt_connect()
   m = mqtt.Client(deviceID, 120, mqtt_user, mqtt_password, mqtt_clean)
   m:lwt(data.."status", "off", 0, 1)
-  m:on("offline", function(client) print ("offline") end)
+  m:on("offline", function(client) handle_mqtt_error(client, "offline") end)
   m:on("message", function(client, topic, msg) on_message(client, topic, msg) end)
-  m:connect(mqtt_broker, mqtt_port, 0, 1, function(client) on_connect(client) end,function(client, reason) print("failed reason: "..reason) end)
-  print("MQTT connect.. ")
+  do_mqtt_connect(m, true)
 end
 
 mqtt_connect()
