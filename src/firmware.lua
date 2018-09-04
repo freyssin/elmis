@@ -1,5 +1,5 @@
 -- LGPL v3 License (Free Software Foundation)
--- Copyright (C) 2017 ScalAgent Distributed Technologies
+-- Copyright (C) 2017 -2018 ScalAgent Distributed Technologies
 
 -- Firmware module
 
@@ -11,14 +11,62 @@ local dev, publish
 
 -- Declare module functions below
 
-local function update(msg)
+local function remove(msg)
+  print("remove..")
+  idx = msg:find("\n")
+  if idx ~= nil then
+    fname = msg:sub(0, idx-1)
+    print("remove "..fname)
+    file.remove(fname)
+    print("remove ok")
+  end
+end
+
+local function append(msg)
+  print("append..")
   idx = msg:find("\n")
   fname = msg:sub(0, idx-1)
+  print("append "..fname)
+
+  fd = file.open(fname, "a+")
+  if fd then
+    fd:write(msg:sub(idx+1))
+    fd:flush()
+    fd:close()
+    print("append ok")
+  end
+end
+
+local function rename(msg)
+  print("rename..")
+  idx1 = msg:find(" ")
+  fnameold = msg:sub(0, idx1-1)
+  idx2 = msg:find("\n")
+  if (idx1 ~= nil) and (idx2 ~= nil) then
+    print(idx1..", "..idx2)
+    fnamenew = msg:sub(idx1+1, idx2-1)
+    print("update "..fnameold.." -> "..fnamenew)
+
+    if (file.exists(fnamenew)) then
+      print("remove existing file")
+      file.remove(fnamenew)
+    end
+    file.rename(fnameold, fnamenew)
+    print("rename ok")
+  end
+end
+
+local function update(msg)
+  print("update..")
+  idx = msg:find("\n")
+  fname = msg:sub(0, idx-1)
+  print("update "..fname)
 
   fd = file.open(fname..".tmp", "w+")
   if fd then
     -- write 'foo bar' to the end of the file
     fd:write(msg:sub(idx+1))
+    fd:flush()
     fd:close()
   end
   if (file.exists(fname..".lua")) then
@@ -26,6 +74,7 @@ local function update(msg)
     file.remove(fname..".lua")
   end
   file.rename(fname..".tmp", fname..".lua")
+  print("updated")
 end
 
 local function restart()
@@ -41,7 +90,10 @@ end
 -- Table of functions 
 local actions = {
   ["update"] = update,
-  ["restart"] = restart
+  ["restart"] = restart,
+  ["remove"] = remove,
+  ["append"] = append,
+  ["rename"] = rename
 }
 
 -- These 2 methods are needed by micro-service framework
@@ -50,5 +102,8 @@ FW.actions = actions
 -- These methods are only needed for external use of the LED module
 FW.update = update
 FW.restart = restart
+FW.remove = remove
+FW.append = append
+FW.rename = rename
 
 return FW
