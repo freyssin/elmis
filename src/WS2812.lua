@@ -1,5 +1,5 @@
 -- LGPL v3 License (Free Software Foundation)
--- Copyright (C) 2017 ScalAgent Distributed Technologies
+-- Copyright (C) 2017 - 2018 ScalAgent Distributed Technologies
 
 -- WS2812 module
 -- NOTE: D4 (GPIO2) pin is used by the library, but shield uses D2 (GPIO4)
@@ -62,6 +62,16 @@ local function off_ws2812()
   ws2812.write(string.char(0,0,0))
 end
 
+local function set_ws2812(msg)
+  if msg == "true" then
+  	lighton = true
+  	ws2812.write(string.char(color[1],color[2],color[3]))
+  else
+  	lighton = false
+  	ws2812.write(string.char(0,0,0))
+  end
+end
+
 -- Initialisation function
 local function init_ws2812(d, p)
   dev = d
@@ -77,7 +87,8 @@ local actions = {
   ["color"] = set_color,
   ["toggle"] = toggle_ws2812,
   ["blink"] = blink_ws2812,
-  ["off"] = off_ws2812
+  ["off"] = off_ws2812,
+  ["set"] = set_ws2812
 }
 
 -- These 2 methods are needed by micro-service framework
@@ -89,5 +100,6 @@ WS2812.color = set_color
 WS2812.toggle = toggle_ws2812
 WS2812.blink = blink_ws2812
 WS2812.off = off_ws2812
+WS2812.set = set_ws2812
 
 return WS2812
