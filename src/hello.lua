@@ -1,5 +1,5 @@
 -- LGPL v3 License (Free Software Foundation)
--- Copyright (C) 2017 ScalAgent Distributed Technologies
+-- Copyright (C) 2017 -2018 ScalAgent Distributed Technologies
 
 -- Hello module
 
@@ -24,6 +24,7 @@ local function set_msg(m)
 end
 
 local function send_msg()
+  print(msg)
   publish(dev, "hello", msg)
 end
 
@@ -59,7 +60,7 @@ local function init_hello(d, p)
   dev = d
   publish = p
   -- Add the initialisation of the Hello shield
-  register(10000)
+  register(0)
 end
 
 -- Table of functions 
