@@ -1,5 +1,5 @@
 -- LGPL v3 License (Free Software Foundation)
--- Copyright (C) 2017 ScalAgent Distributed Technologies
+-- Copyright (C) 2017 - 2018 ScalAgent Distributed Technologies
 
 -- Get temperature and humidity from SHT30 field
 
@@ -29,6 +29,8 @@ local function get_data2()
   if (crc ~= data:byte(5)) then
     print("get_data CRC nok")
   end
+
+  print("temperature="..(data:byte(3)).."."..(data:byte(4))..", humidity="..(data:byte(1)).."."..(data:byte(2)))
 
   -- send message
   msg=""..(data:byte(3)).."."..(data:byte(4))

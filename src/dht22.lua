@@ -1,5 +1,5 @@
 -- LGPL v3 License (Free Software Foundation)
--- Copyright (C) 2017 ScalAgent Distributed Technologies
+-- Copyright (C) 2017 - 2018 ScalAgent Distributed Technologies
 
 -- Get temperature and humidity from DHT11/22 field
 
@@ -16,6 +16,7 @@ local function get_data()
   -- get data
   status, temp, humi, temp_dec, humi_dec = dht.read(pin_dht)
   if status == dht.OK then
+    print("temperature="..(temp).."."..(temp_dec)..", humidity="..(humi).."."..(humi_dec))
     -- send message
     msg=""..(temp).."."..(temp_dec)
     publish(dev, "temperature", msg)
@@ -79,4 +80,5 @@ DHT.actions = actions
 -- These methods are only needed for external use of the DHT module
 DHT.get_data = get_data
 DHT.set_period = set_period
+
 return DHT
