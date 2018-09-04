@@ -49,7 +49,9 @@ end
 
 local function set_period(m)
   p = tonumber(m)
-  register(p)
+  if (p ~= nil) then
+    register(p)
+  end
 end
 
 -- Initialisation function
@@ -62,7 +64,6 @@ end
 
 -- Table of functions 
 local actions = {
-  ["init"] = init_hello,
   ["set_hello"] = set_msg,
   ["set_period"] = set_period,
   ["say_hello"] = send_msg

@@ -59,7 +59,7 @@ config_dev.lua configuration file.
 
 #### Published datas
 
-The component publish retained messages on the ${data}/${device}/status topic:
+The component publish a retained messages on the ${data}/${device}/status topic:
 
 * "on" after initialisation
 * "off" in case of failure or shutdown (using the will MQTT functionnality).
@@ -166,8 +166,11 @@ local dev, publish
 
 -- Hello shield parameters
 
-local period=10000
+-- If period set to 0 datas shall be get explicitly, otherwise the device
+-- send data automatically. Set by default to 10s in init_hello.
+local period=0
 local timer = tmr.create()
+
 local msg = "Hello world"
 
 -- Declare component functions below
@@ -181,19 +184,44 @@ local function send_msg()
   publish(dev, "hello", msg)
 end
 
+local function register(p)
+  if (p > 0) then
+    if (p < 1000) then
+      p = 1000
+    end
+    if (period > 0) then
+      timer:interval(p)
+    else
+      timer:register(p, tmr.ALARM_AUTO, send_msg)
+      timer:start()
+    end
+    period = p
+  else
+    if (period > 0) then
+      timer:unregister();
+    end
+    period = 0
+  end
+end
+
+local function set_period(m)
+  p = tonumber(m)
+  register(p)
+end
+
 -- Initialisation function
 local function init_hello(d, p)
   dev = d
   publish = p
-  -- Add the initialisation of the X shield if needed below
-  timer:register(period, tmr.ALARM_AUTO, send_msg)
-  timer:start()
+  -- Add the initialisation of the Hello shield
+  register(10000)
 end
 
 -- Table of functions 
 local actions = {
-  ["init"] = init_hello,
-  ["set_hello"] = set_msg
+  ["set_hello"] = set_msg,
+  ["set_period"] = set_period,
+  ["say_hello"] = send_msg
 }
 
 -- These 2 methods are needed by micro-service framework
@@ -201,6 +229,7 @@ Hello.init = init_hello
 Hello.actions = actions
 -- These methods below are only needed for external use of the X module
 Hello.set_msg = set_msg
+Hello.set_period = set_period
 Hello.send_msg = send_msg
 
 return Hello
@@ -221,10 +250,19 @@ This component allows to get information about the device and its configuration.
 #### Remote actions
 
 * **get_info**: Returns various informations about firmware version, chip and flash
-identifiers. The request message is empty, the reply is sent as a unique message on
-${data}/${device}/info topic.
-* **get_fsinfo**: Returns informations about the filesystem.  The request message is
-empty, the reply is sent as a unique message on ${data}/${device}/fsinfo topic.
+identifiers, it corresponds to a call to the fnction node.info(). The request message
+is empty, the reply is sent as a unique message on ${data}/${device}/info topic.
+* **get_fsinfo**: Returns informations about the filesystem, it corresponds to a call
+to the function file.fsinfo().  The request message is empty, the reply is sent as a
+unique message on ${data}/${device}/fsinfo topic.
+* **get_heap**: Returns the current heap size, it corresponds to a call to node.heap().
+The request message is empty, the reply is sent as a unique message on
+${data}/${device}/heap topic.
+* **get_flashsize**: Returns  the flash chip size in bytes, it corresponds to a call to
+the function node.flash_size(). The request message is empty, the reply is sent as a
+unique message on ${data}/${device}/info topic.
+* **restart**: Asks to restart the device.
+
 
 #### Published datas
 
@@ -236,9 +274,9 @@ This component allows to control the platorm, currently software updates and res
 
 #### Remote actions
 
-* **update**: Updates the requesting LUA file. The basename of file to update is given
-in the first line of the message (without extension), the next lines of the message
-contains the new file content.
+* **update**: Atomically updates the requesting LUA file. The basename of file to update
+is given in the first line of the message (without ".lua" extension), the next lines of
+the message contains the new file content.
 * **restart**: Asks to restart the device.
 
 #### Published datas
@@ -254,11 +292,12 @@ The update is made atomically, a file named *${basename}.tmp* is first created w
 ## Additionnal components
 
 Each component below corresponds to a device, for example a Wemos shield.
+"led" and "hello" components correspond respectively to an actuator and to a
+sensor that need no other stuff than Wemos.
 
 ### led.lua
 
-This component allows to play with the blue led on the NodeMCU board.
-Be careful this component use GPIO2 also used by SHT30 shield.
+This component allows to play with the blue led on Wemos or ESP8266 boards.
  
 #### Remote actions
 
@@ -271,18 +310,46 @@ the led. The period of change is defined in milliseconds by the delay local vari
 
 Currently empty.
 
-### sht30.lua
+### hello.lua
 
-This component correponds to the use of the Wemos SHT30 shield.
-Be careful, the Wemos SHT30 shield is not compatible with the relay shield.
+This component allows to publish an hello message from the board. The message can be
+send either explicitly by invoking **say_hello** action or periodically (in observation
+mode).
 
 #### Remote actions
 
-Currently there is only one remote action defined, it allows to explicitly get
-data from the corresponding sensor. In future we can whish methods allowing to
-dynamically configure the component, for example to toggle it in observation mode,
-or to fix the observation period.
+* **set_hello**: this method defines the hello message, set to "Hello world' at
+starting.
+* **set_period**: this method allows to set the observation period and takes as
+parameter an integer representing the observation period in milliseconds. If the
+resulting period is less than or equal to 0 the observation is disabled.
+than 0 the component is in observation mode.
+* **say_hello**: this method triggers the publication of the hello message.
 
+#### Published datas
+
+If the component is initialized in observation mode it publishes regularly (see period
+local variable, by default 10.000 ms) the *hello* message.
+
+* **hello**: *${data}/${device}/hello/hello*
+
+### sht30.lua
+
+This component correponds to the use of the Wemos SHT30 shield.
+Be careful, the Wemos SHT30 shield is not compatible with the relay or WS2812
+shields.
+
+#### Remote actions
+
+Currently there are two remote actions defined, one to set the observation period
+of sensor, the other to explicitly get the data from the corresponding sensor. At
+starting the component is configured in observation mode with a period of  10.000
+milliseconds.
+
+* **set_period**: this method allows to set the observation period and takes as
+parameter an integer representing the observation period in milliseconds. If the
+resulting period is less than or equal to 0 the observation is disabled.
+than 0 the component is in observation mode.
 * **get_data**: trigger the publication of the sensor's temperature and humidity
 datas on the corresponding topics *${data}/${device}/sht30/temperature* and
 *${data}/${device}/sht30/humidity*.
@@ -290,10 +357,10 @@ datas on the corresponding topics *${data}/${device}/sht30/temperature* and
 #### Published datas
 
 If the component is initialized in observation mode it publishes regularly (see period
-local variable) the sensor's temperature and humidity datas.
+local variable, by default 10.000 ms) the sensor's temperature and humidity datas.
 
-* **temperature**: 
-* **humidity**: 
+* **temperature**: *${data}/${device}/sht30/temperature*
+* **humidity**: *${data}/${device}/sht30/humidity*
 
 ### dht22.lua
 
@@ -303,11 +370,15 @@ It should be used as is with a DHT11 or DHT22 shield.
 
 #### Remote actions
 
-Currently there is only one remote action defined, it allows to explicitly get
-data from the corresponding sensor. In future we can whish methods allowing to
-dynamically configure the component, for example to toggle it in observation mode,
-or to fix the observation period.
+Currently there are two remote actions defined, one to set the observation period
+of sensor, the other to explicitly get the data from the corresponding sensor. At
+starting the component is configured in observation mode with a period of  10.000
+milliseconds.
 
+* **set_period**: this method allows to set the observation period and takes as
+parameter an integer representing the observation period in milliseconds. If the
+resulting period is less than or equal to 0 the observation is disabled.
+than 0 the component is in observation mode.
 * **get_data**: trigger the publication of the sensor's temperature and humidity
 datas on the corresponding topics *${data}/${device}/dht22/temperature* and
 *${data}/${device}/dht22/humidity*.
@@ -317,21 +388,26 @@ datas on the corresponding topics *${data}/${device}/dht22/temperature* and
 If the component is initialized in observation mode it publishes regularly (see period
 local variable) the sensor's temperature and humidity datas.
 
-* **temperature**: 
-* **humidity**: 
+* **temperature**: *${data}/${device}/dht22/temperature*
+* **humidity**: *${data}/${device}/dht22/humidity*
 
 ### dht12.lua
 
 This component correponds to the use of the new Wemos DHT shield based on DHT12.
-Be careful, this new Wemos DHT shield is not compatible with the relay shield.
+Be careful, this new Wemos DHT shield is not compatible with the relay or WS2812
+shields.
 
 #### Remote actions
 
-Currently there is only one remote action defined, it allows to explicitly get
-data from the corresponding sensor. In future we can whish methods allowing to
-dynamically configure the component, for example to toggle it in observation mode,
-or to fix the observation period.
+Currently there are two remote actions defined, one to set the observation period
+of sensor, the other to explicitly get the data from the corresponding sensor. At
+starting the component is configured in observation mode with a period of  10.000
+milliseconds.
 
+* **set_period**: this method allows to set the observation period and takes as
+parameter an integer representing the observation period in milliseconds. If the
+resulting period is less than or equal to 0 the observation is disabled.
+than 0 the component is in observation mode.
 * **get_data**: trigger the publication of the sensor's temperature and humidity
 datas on the corresponding topics *${data}/${device}/dht12/temperature* and
 *${data}/${device}/dht12/humidity*.
@@ -341,13 +417,15 @@ datas on the corresponding topics *${data}/${device}/dht12/temperature* and
 If the component is initialized in observation mode it publishes regularly (see period
 local variable) the sensor's temperature and humidity datas.
 
-* **temperature**: 
-* **humidity**: 
+* **temperature**: *${data}/${device}/dht12/temperature*
+* **humidity**: *${data}/${device}/dht12/humidity*
 
 ### relay.lua
 
 This component correponds to the use of the Wemos relay shield.
-Be careful, the Wemos relay shield is not compatible with the SHT30 shield.
+Be careful, the Wemos relay shield is not compatible with the SHT30 or DHT12 I2C
+shields. A solution is to modify the wiring to release the pin D1 (used by I2C) and
+use the pin D5 to control the relay.
 
 #### Remote actions
 
@@ -362,9 +440,10 @@ Currently empty.
 
 ### WS2812.lua
 
-This component correponds to the use of the Wemos WS2812 led shield.
-Be careful, the Wemos WS2812 led shield is not compatible with i2c components
-like SHT30 or DHT12.
+This component correponds to the use of the Wemos WS2812 RGB led shield.
+Be careful, the Wemos WS2812 led shield is not compatible with the ws2812 NodeMCU
+module. A solution is to modify the wiring to release the pin D2 (also used by I2C)
+and use the pin D4 (used by ws2812 module) to control the led.
 
 The led state is defined first by its status (on | off), and second by its color.
 There are 7 predefined colors: red, green, blue, yellow, magenta, cyan and
@@ -377,7 +456,7 @@ At starting the led is off and its color is *green*.
 parameter or if the color is not defined the color is not changed.
 * **color**: change the color of the led with the color given in parameter. If
 there is no parameter or if the color is not defined the color is not changed.
-The color change will taken in account to the next state change.
+The color change will be taken in account to the next state change.
 * **toggle**: change the state of the RGB led (on -> off, and off -> on).
 * **blink**: temporarily change during 1 second the state of the RGB led. The
 period of change is defined in milliseconds by the delay local variable.

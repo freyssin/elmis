@@ -55,7 +55,9 @@ end
 
 local function set_period(m)
   p = tonumber(m)
-  register(p)
+  if (p ~= nil) then
+    register(p)
+  end
 end
 
 -- Initialisation function
@@ -67,7 +69,6 @@ local function init_dht(d, p)
 end
 
 local actions = {
-  ["init"] = init_dht,
   ["get_data"] = get_data,
   ["set_period"] = set_period
 }

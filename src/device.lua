@@ -41,7 +41,6 @@ end
 
 -- Table of functions 
 local actions = {
-  ["init"] = init_dev,
   ["get_info"] = get_info,
   ["get_fsinfo"] = get_fsinfo,
   ["get_heap"] = get_heap,

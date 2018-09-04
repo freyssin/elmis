@@ -53,10 +53,12 @@ end
 
 local function on_ws2812(msg)
   set_color(msg)
+  lighton = true
   ws2812.write(string.char(color[1],color[2],color[3]))
 end
 
 local function off_ws2812()
+  lighton = false
   ws2812.write(string.char(0,0,0))
 end
 
@@ -71,7 +73,6 @@ end
 
 -- Table of functions 
 local actions = {
-  ["init"] = init_ws2812,
   ["on"] = on_ws2812,
   ["color"] = set_color,
   ["toggle"] = toggle_ws2812,
@@ -88,8 +89,5 @@ WS2812.color = set_color
 WS2812.toggle = toggle_ws2812
 WS2812.blink = blink_ws2812
 WS2812.off = off_ws2812
-
-init_ws2812()
-off_ws2812()
 
 return WS2812

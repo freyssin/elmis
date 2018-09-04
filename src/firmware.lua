@@ -40,7 +40,6 @@ end
 
 -- Table of functions 
 local actions = {
-  ["init"] = init_fw,
   ["update"] = update,
   ["restart"] = restart
 }

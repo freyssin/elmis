@@ -20,7 +20,6 @@ end
 
 -- Table of functions 
 local actions = {
-  ["init"] = init_x
 }
 
 -- These 2 methods are needed by micro-service framework

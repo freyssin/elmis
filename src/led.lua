@@ -40,7 +40,6 @@ end
 
 -- Table of functions 
 local actions = {
-  ["init"] = init,
   ["toggle"] = toggle,
   ["blink"] = blink
 }

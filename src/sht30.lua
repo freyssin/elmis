@@ -73,7 +73,9 @@ end
 
 local function set_period(m)
   p = tonumber(m)
-  register(p)
+  if (p ~= nil) then
+    register(p)
+  end
 end
 
 -- Initialisation function
@@ -86,7 +88,6 @@ local function init_sht(d, p)
 end
 
 local actions = {
-  ["init"] = init_sht,
   ["get_data"] = get_data,
   ["set_period"] = set_period
 }
@@ -96,4 +97,5 @@ SHT.actions = actions
 -- These methods are only needed for external use of the SHT module
 SHT.get_data = get_data
 SHT.set_period = set_period
+
 return SHT
