@@ -1,5 +1,5 @@
 -- LGPL v3 License (Free Software Foundation)
--- Copyright (C) 2017 ScalAgent Distributed Technologies
+-- Copyright (C) 2017 - 2018 ScalAgent Distributed Technologies
 
 -- Get temperature and humidity from SHT30 field
 
@@ -28,6 +28,8 @@ local function get_data2()
   temp = ((((data:byte(1) * 256) + data:byte(2)) * 1750) / 65535) - 450
   humi = ((((data:byte(4) * 256) + data:byte(5)) * 1000) / 65535)
 
+  print("temperature="..(temp/10).."."..(temp%10)..", humidity="..(humi/10).."."..(humi%10))
+
   -- send message
   msg=""..(temp/10).."."..(temp%10)
   publish(dev, "temperature", msg)
@@ -36,7 +38,6 @@ local function get_data2()
 end
 
 local function get_data()
-  print("get_data")
   -- send command
   i2c.start(id)
   ack = i2c.address(id, dev_addr, i2c.TRANSMITTER)
