@@ -1,5 +1,5 @@
 -- LGPL v3 License (Free Software Foundation)
--- Copyright (C) 2017 ScalAgent Distributed Technologies
+-- Copyright (C) 2017 - 2018 ScalAgent Distributed Technologies
 
 -- Define MQTT URI
 -- mqtt_broker="xx.xx.xx.xx"
@@ -10,8 +10,8 @@ mqtt_port=1883
 mqtt_user=nil
 mqtt_password=nil
 
--- Define session parameters
-mqtt_clean=1
+-- Define session parameters (Shall be false)
+mqtt_clean=0
 
 -- Define device identifier
 deviceID = "nodemcu01"
