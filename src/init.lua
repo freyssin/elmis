@@ -1,7 +1,7 @@
 -- LGPL v3 License (Free Software Foundation)
 -- Copyright (C) 2017 -2018 ScalAgent Distributed Technologies
 
--- load credentials, 'ssid' and 'pwd'
+-- load 'station_cfg' containing WiFi config: 'ssid' and 'pwd'
 dofile("config_net.lua")
 
 function run()
@@ -11,7 +11,7 @@ end
 function connect()
   print("Connecting to WiFi access point...")
   wifi.setmode(wifi.STATION)
-  wifi.sta.config(ssid, pwd)
+  wifi.sta.config(station_cfg)
 
   tmr.create():alarm(1000, tmr.ALARM_AUTO, function(cb_timer)
     if wifi.sta.getip() == nil then
