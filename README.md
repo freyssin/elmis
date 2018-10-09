@@ -46,10 +46,11 @@ interrupt the sequence by e.g. deleting or renaming init.lua file (see
 This configuration file defines the SSID and password needed to connect to your WiFi
 network, for example:
 ```lua
-ssid = "xxxxxxxx"
-pwd = "xxxxxxxx"
+station_cfg={}
+station_cfg.ssid="....."
+station_cfg.pwd="...."
 ```
-
+See https://nodemcu.readthedocs.io/en/master/en/modules/wifi/#wifistaconfig
 
 ### Base component: *startup.lua*
 
