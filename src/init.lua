@@ -11,7 +11,11 @@ end
 function connect()
   print("Connecting to WiFi access point...")
   wifi.setmode(wifi.STATION)
-  wifi.sta.config(ssid, pwd)
+  wifi_cfg={}
+  wifi_cfg.ssid=ssid
+  wifi_cfg.pwd=pwd
+  wifi_cfg.save=false
+  wifi.sta.config(wifi_cfg)
 
   tmr.create():alarm(1000, tmr.ALARM_AUTO, function(cb_timer)
     if wifi.sta.getip() == nil then
