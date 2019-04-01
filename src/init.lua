@@ -1,5 +1,5 @@
 -- LGPL v3 License (Free Software Foundation)
--- Copyright (C) 2017 -2018 ScalAgent Distributed Technologies
+-- Copyright (C) 2017 - 2019 ScalAgent Distributed Technologies
 
 -- load credentials, 'ssid' and 'pwd'
 dofile("config_net.lua")
