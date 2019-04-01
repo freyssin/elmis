@@ -1,5 +1,5 @@
 -- LGPL v3 License (Free Software Foundation)
--- Copyright (C) 2017 - 2018 ScalAgent Distributed Technologies
+-- Copyright (C) 2017 - 2019 ScalAgent Distributed Technologies
 
 -- Get temperature and humidity from SHT30 field
 
@@ -7,7 +7,7 @@ local DHT12 = {}
 
 local dev, publish
 
--- SHT shield and I2C parameters
+-- DHT shield and I2C parameters
 local id  = 0
 local sda = 2 -- pin D2
 local scl = 1 -- pin D1
