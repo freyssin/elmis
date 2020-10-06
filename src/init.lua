@@ -11,10 +11,6 @@ end
 function connect()
   print("Connecting to WiFi access point...")
   wifi.setmode(wifi.STATION)
-  wifi_cfg={}
-  wifi_cfg.ssid=ssid
-  wifi_cfg.pwd=pwd
-  wifi_cfg.save=false
   wifi.sta.config(wifi_cfg)
 
   tmr.create():alarm(1000, tmr.ALARM_AUTO, function(cb_timer)
@@ -27,7 +23,7 @@ function connect()
       print("Chip ID: ", node.chipid())
       print("Heap Size: ", node.heap(),'\n')
       print ("IP address: ", wifi.sta.getip ())
-      print ("Configuration done")
+      print ("WIFI Connected")
 
       run()
     end
